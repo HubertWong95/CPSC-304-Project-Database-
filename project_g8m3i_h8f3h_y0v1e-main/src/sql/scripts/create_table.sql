@@ -1,0 +1,675 @@
+DROP TABLE Holds;
+DROP TABLE Joins;
+DROP TABLE IsIn;
+DROP TABLE TakesCare;
+DROP TABLE Staff1;
+DROP TABLE Staff2;
+DROP TABLE Event1;
+DROP TABLE Event2;
+DROP TABLE Visitor1;
+DROP TABLE Visitor2;
+DROP TABLE Needs;
+DROP TABLE Food;
+DROP TABLE Equipment;
+DROP TABLE HasHealthRecord;
+DROP TABLE CreaturesLivesIn;
+DROP TABLE HabitatsContained;
+DROP TABLE Zone;
+
+CREATE TABLE Staff2 (
+specialization VARCHAR(50) PRIMARY KEY,
+department VARCHAR(50));
+
+CREATE TABLE Staff1 (
+staffID INTEGER PRIMARY KEY,
+name VARCHAR(50) NOT NULL,
+specialization VARCHAR(50) NOT NULL,
+Position VARCHAR(50) NOT NULL,
+FOREIGN KEY (specialization) 
+	REFERENCES Staff2(specialization)
+	ON DELETE CASCADE);
+
+-- CREATE TABLE Event2 (
+-- eventType ENUM('promotion', 'private party', 'holiday special', 'fundraising', 'conference') PRIMARY KEY,
+-- capacity INTEGER NOT NULL);
+
+CREATE TABLE Event2 (
+eventType VARCHAR(30) PRIMARY KEY,
+capacity INTEGER NOT NULL);
+
+-- CREATE TABLE Event1 (
+-- eventID INTEGER PRIMARY KEY,
+-- startTime DATETIME NOT NULL,
+-- endTime DATETIME NOT NULL,
+-- eventType ENUM('promotion', 'private party', 'holiday special', 'fundraising', 'conference') NOT NULL,
+-- FOREIGN KEY eventType REFERENCES Event2(eventType)); 
+
+CREATE TABLE Event1 (
+eventID INTEGER PRIMARY KEY,
+startTime TIMESTAMP NOT NULL,
+endTime TIMESTAMP NOT NULL,
+eventType VARCHAR(30) NOT NULL,
+FOREIGN KEY (eventType) 
+	REFERENCES Event2(eventType)
+	ON DELETE CASCADE); 
+
+CREATE TABLE Holds (
+staffID INTEGER,
+eventID INTEGER,
+PRIMARY KEY (staffID, eventID),
+FOREIGN KEY (staffID) 
+	REFERENCES Staff1(staffID)
+	ON DELETE CASCADE,
+FOREIGN KEY (eventID) 
+	REFERENCES Event1(eventID)
+	ON DELETE CASCADE);
+
+-- CREATE TABLE Visitor2 (
+-- age INTEGER PRIMARY KEY,
+-- ticketType ENUM('Child', 'Teen', 'Adult', 'Senior') NOT NULL);
+
+CREATE TABLE Visitor2 (
+age INTEGER PRIMARY KEY,
+ticketType VARCHAR(10) NOT NULL);
+
+CREATE TABLE Visitor1 (
+ticketID INTEGER PRIMARY KEY,
+entryTime TIMESTAMP,
+exitTime TIMESTAMP,
+age INTEGER NOT NULL,
+FOREIGN KEY (age) 
+	REFERENCES Visitor2(age));
+
+CREATE TABLE Joins (
+ticketID INTEGER,
+eventID INTEGER,
+PRIMARY KEY (ticketID, eventID),
+FOREIGN KEY (ticketID) 
+	REFERENCES Visitor1(ticketID)
+	ON DELETE CASCADE,
+FOREIGN KEY (eventID) 
+	REFERENCES Event1(eventID)
+	ON DELETE CASCADE);
+
+-- CREATE TABLE Zone (
+-- name VARCHAR(50) PRIMARY KEY,
+-- size INTEGER NOT NULL,
+-- theme VARCHAR(50) UNIQUE NOT NULL);
+
+CREATE TABLE Zone (
+name VARCHAR(50) PRIMARY KEY,
+zoneSize INTEGER NOT NULL,
+theme VARCHAR(50) NOT NULL UNIQUE);
+
+CREATE TABLE IsIn (
+eventID INTEGER,
+zoneName VARCHAR(50),
+PRIMARY KEY (zoneName, eventID),
+FOREIGN KEY (eventID) REFERENCES Event1(eventID)
+	ON DELETE CASCADE,
+FOREIGN KEY (zoneName) REFERENCES Zone(name)
+	ON DELETE CASCADE);
+
+CREATE TABLE Equipment (
+name VARCHAR(50) PRIMARY KEY,
+quantity INTEGER,
+usage VARCHAR(50));
+
+CREATE TABLE Food (
+name VARCHAR(50) PRIMARY KEY,
+weight FLOAT,
+expiryDate DATE NOT NULL,
+FOREIGN KEY (name) REFERENCES Equipment(name));
+
+CREATE TABLE Needs (
+zoneName VARCHAR(50),
+equipmentName VARCHAR(50),
+PRIMARY KEY (zoneName, equipmentName),
+FOREIGN KEY (equipmentName) REFERENCES Equipment(name),
+FOREIGN KEY (zoneName) REFERENCES Zone(name));
+
+CREATE TABLE HabitatsContained (
+name VARCHAR(50) PRIMARY KEY,
+minTemp FLOAT NOT NULL,
+maxTemp FLOAT NOT NULL,
+minRh INTEGER NOT NULL,
+maxRh INTEGER NOT NULL,
+environment VARCHAR(50) NOT NULL,
+zoneName VARCHAR(50) NOT NULL,
+FOREIGN KEY (zoneName) REFERENCES Zone(name));
+
+CREATE TABLE CreaturesLivesIn (
+creatureID INTEGER PRIMARY KEY,
+species VARCHAR(50) NOT NULL,
+age INTEGER NOT NULL, 
+name VARCHAR(50) NOT NULL, 
+class VARCHAR(50), 
+sunExposure VARCHAR(20), 
+habitatName VARCHAR(50) NOT NULL,
+FOREIGN KEY (habitatName) REFERENCES HabitatsContained(name));
+
+CREATE TABLE HasHealthRecord (
+healthRecordID INTEGER PRIMARY KEY,
+time DATE NOT NULL,
+eventDescription VARCHAR(100) NOT NULL,
+creatureID INTEGER NOT NULL,
+FOREIGN KEY (creatureID) REFERENCES CreaturesLivesIn(creatureID));
+
+CREATE TABLE TakesCare (
+staffID INTEGER,
+equipmentName VARCHAR(50),
+creatureID INTEGER,
+PRIMARY KEY (staffID, equipmentName, creatureID),
+FOREIGN KEY (staffID) REFERENCES Staff1(staffID)
+	ON DELETE CASCADE,
+FOREIGN KEY (equipmentName) REFERENCES Equipment(name)
+	ON DELETE CASCADE,
+FOREIGN KEY (creatureID) REFERENCES CreaturesLivesIn(creatureID)
+	ON DELETE CASCADE);
+
+INSERT INTO Staff2
+VALUES ('Customer Relations', 'Visitor Services');
+
+INSERT INTO Staff2
+VALUES ('Botany', 'Conservation');
+
+INSERT INTO Staff2
+VALUES ('Zoology', 'Animal Care');
+
+INSERT INTO Staff2
+VALUES ('Horticulture', 'Plant Care');
+
+INSERT INTO Staff2
+VALUES ('Veterinary Medicine', 'Veterinary Services');
+
+INSERT INTO Staff1
+VALUES (101, 'White Ross', 'Customer Relations', 'Customer Service');
+
+INSERT INTO Staff1
+VALUES (102, 'Alex Poon', 'Veterinary Medicine', 'Veterinarian');
+
+INSERT INTO Staff1
+VALUES (103, 'Allen Iverson', 'Zoology', 'Keeper');
+
+INSERT INTO Staff1
+VALUES (104, 'Taylar Swift', 'Customer Relations', 'Customer Service');
+
+INSERT INTO Staff1
+VALUES (105, 'Elon Musk', 'Horticulture', 'Gardener');
+
+INSERT INTO Staff1
+VALUES (106, 'Jasmine Kaur', 'Botany', 'Researcher');
+
+INSERT INTO Event2
+VALUES ('promotion', 1500);
+
+INSERT INTO Event2
+VALUES ('private party', 50);
+
+INSERT INTO Event2
+VALUES ('holiday special', 2000);
+
+INSERT INTO Event2
+VALUES ('fundraising', 1000);
+
+INSERT INTO Event2
+VALUES ('conference', 100);
+
+INSERT INTO Event1
+VALUES (1, TO_TIMESTAMP('2023-06-18 15:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 15:30:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'promotion');
+
+INSERT INTO Event1
+VALUES (2, TO_TIMESTAMP('2023-09-05 15:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-09-05 17:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'fundraising');
+
+INSERT INTO Event1
+VALUES (3, TO_TIMESTAMP('2023-12-24 15:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-12-24 19:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'holiday special');
+
+INSERT INTO Event1
+VALUES (4, TO_TIMESTAMP('2023-08-12 12:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-08-12 17:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'private party');
+
+INSERT INTO Event1
+VALUES (5, TO_TIMESTAMP('2023-07-18 15:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-07-18 17:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'conference');
+
+INSERT INTO Event1
+VALUES (6, TO_TIMESTAMP('2023-06-18 15:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 17:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'conference');
+
+INSERT INTO Event1
+VALUES (7, TO_TIMESTAMP('2023-06-18 12:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 14:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'private party');
+
+INSERT INTO Event1
+VALUES (8, TO_TIMESTAMP('2023-06-18 14:30:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 15:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'promotion');
+
+INSERT INTO Event1
+VALUES (9, TO_TIMESTAMP('2023-06-18 16:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 17:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'promotion');
+
+INSERT INTO Event1
+VALUES (10, TO_TIMESTAMP('2023-06-24 12:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-24 14:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'promotion');
+
+INSERT INTO Event1
+VALUES (11, TO_TIMESTAMP('2023-06-24 14:30:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-24 15:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 'promotion');
+
+INSERT INTO Holds
+VALUES (101, 2);
+
+INSERT INTO Holds
+VALUES (102, 5);
+
+INSERT INTO Holds
+VALUES (103, 1);
+
+INSERT INTO Holds
+VALUES (104, 4);
+
+INSERT INTO Holds
+VALUES (105, 3);
+
+INSERT INTO Holds
+VALUES (106, 1);
+
+INSERT INTO Holds
+VALUES (101, 1);
+
+INSERT INTO Holds
+VALUES (104, 6);
+
+INSERT INTO Holds
+VALUES (101, 7);
+
+INSERT INTO Holds
+VALUES (104, 8);
+
+INSERT INTO Holds
+VALUES (101, 9);
+
+INSERT INTO Holds
+VALUES (104, 10);
+
+INSERT INTO Holds
+VALUES (101, 11);
+
+INSERT INTO Visitor2
+VALUES (6, 'child');
+
+INSERT INTO Visitor2
+VALUES (70, 'senior');
+
+INSERT INTO Visitor2 
+VALUES (18, 'teen');
+
+INSERT INTO Visitor2 
+VALUES (45, 'adult');
+
+INSERT INTO Visitor2 
+VALUES (38, 'adult');
+
+INSERT INTO Visitor2
+VALUES (20, 'adult');
+
+INSERT INTO Visitor2
+VALUES (21, 'adult');
+
+INSERT INTO Visitor2
+VALUES (22, 'adult');
+
+INSERT INTO Visitor2
+VALUES (23, 'adult');
+
+INSERT INTO Visitor2
+VALUES (25, 'adult');
+
+INSERT INTO Visitor2
+VALUES (82, 'senior');
+
+INSERT INTO Visitor2
+VALUES (83, 'senior');
+
+INSERT INTO Visitor2
+VALUES (85, 'senior');
+
+INSERT INTO Visitor2
+VALUES (15, 'teen');
+
+INSERT INTO Visitor1
+VALUES (1001, TO_TIMESTAMP('2023-06-18 10:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 13:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 6);
+
+INSERT INTO Visitor1
+VALUES (1002, TO_TIMESTAMP('2023-09-05 12:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-09-05 18:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 70);
+
+INSERT INTO Visitor1
+VALUES (1003, TO_TIMESTAMP('2023-12-24 10:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-12-24 19:30:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 18);
+
+INSERT INTO Visitor1
+VALUES (1004, TO_TIMESTAMP('2023-08-12 12:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-08-12 17:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 18);
+
+INSERT INTO Visitor1
+VALUES (1005, TO_TIMESTAMP('2023-07-18 14:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-07-18 19:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 45);
+
+INSERT INTO Visitor1
+VALUES (1006, TO_TIMESTAMP('2023-06-18 14:30:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 17:30:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 38);
+
+INSERT INTO Visitor1
+VALUES (1007, TO_TIMESTAMP('2023-06-18 10:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 18:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 21);
+
+INSERT INTO Visitor1
+VALUES (1008, TO_TIMESTAMP('2023-06-18 10:15:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 17:45:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 21);
+
+INSERT INTO Visitor1
+VALUES (1009, TO_TIMESTAMP('2023-06-18 10:20:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 18:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 20);
+
+INSERT INTO Visitor1
+VALUES (1010, TO_TIMESTAMP('2023-06-18 10:03:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 16:34:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 22);
+
+INSERT INTO Visitor1
+VALUES (1011, TO_TIMESTAMP('2023-06-18 10:27:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 16:43:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 23);
+
+INSERT INTO Visitor1
+VALUES (1012, TO_TIMESTAMP('2023-06-18 10:19:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 14:28:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 25);
+
+INSERT INTO Visitor1
+VALUES (1013, TO_TIMESTAMP('2023-12-24 10:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-12-24 19:30:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 82);
+
+INSERT INTO Visitor1
+VALUES (1014, TO_TIMESTAMP('2023-08-12 12:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-08-12 17:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 83);
+
+INSERT INTO Visitor1
+VALUES (1015, TO_TIMESTAMP('2023-07-18 14:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-07-18 19:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 85);
+
+INSERT INTO Visitor1
+VALUES (1016, TO_TIMESTAMP('2023-06-18 10:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-18 18:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 15);
+
+INSERT INTO Visitor1
+VALUES (1017, TO_TIMESTAMP('2023-06-20 10:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-20 18:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 21);
+
+INSERT INTO Visitor1
+VALUES (1018, TO_TIMESTAMP('2023-06-20 10:20:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-20 18:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 20);
+
+INSERT INTO Visitor1
+VALUES (1019, TO_TIMESTAMP('2023-06-20 10:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'),  TO_TIMESTAMP('2023-06-20 18:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF'), 20);
+
+INSERT INTO Joins
+VALUES (1001, 1);
+
+INSERT INTO Joins
+VALUES (1002, 2);
+
+INSERT INTO Joins
+VALUES (1003, 3);
+
+INSERT INTO Joins
+VALUES (1004, 4);
+
+INSERT INTO Joins
+VALUES (1005, 5);
+
+INSERT INTO Joins
+VALUES (1006, 6);
+
+INSERT INTO Joins
+VALUES (1007, 1);
+
+INSERT INTO Joins
+VALUES (1007, 6);
+
+INSERT INTO Joins
+VALUES (1007, 7);
+
+INSERT INTO Joins
+VALUES (1007, 8);
+
+INSERT INTO Joins
+VALUES (1007, 9);
+
+INSERT INTO Joins
+VALUES (1008, 1);
+
+INSERT INTO Joins
+VALUES (1008, 6);
+
+INSERT INTO Joins
+VALUES (1008, 7);
+
+INSERT INTO Joins
+VALUES (1008, 8);
+
+INSERT INTO Joins
+VALUES (1008, 9);
+
+INSERT INTO Joins
+VALUES (1009, 7);
+
+INSERT INTO Joins
+VALUES (1010, 1);
+
+INSERT INTO Joins
+VALUES (1010, 6);
+
+INSERT INTO Joins
+VALUES (1010, 7);
+
+INSERT INTO Joins
+VALUES (1010, 8);
+
+INSERT INTO Joins
+VALUES (1010, 9);
+
+INSERT INTO Joins
+VALUES (1011, 7);
+
+INSERT INTO Joins
+VALUES (1012, 1);
+
+INSERT INTO Joins
+VALUES (1012, 6);
+
+INSERT INTO Joins
+VALUES (1012, 7);
+
+INSERT INTO Joins
+VALUES (1012, 8);
+
+INSERT INTO Joins
+VALUES (1012, 9);
+
+INSERT INTO Joins
+VALUES (1013, 3);
+
+INSERT INTO Joins
+VALUES (1014, 4);
+
+INSERT INTO Joins
+VALUES (1015, 5);
+
+INSERT INTO Joins
+VALUES (1016, 9);
+
+INSERT INTO Joins
+VALUES (1017, 10);
+
+INSERT INTO Joins
+VALUES (1017, 11);
+
+INSERT INTO Joins
+VALUES (1018, 10);
+
+INSERT INTO Joins
+VALUES (1018, 11);
+
+INSERT INTO Joins
+VALUES (1019, 11);
+
+INSERT INTO Zone
+VALUES ('Wild Amazon', 10000, 'jungle');
+
+INSERT INTO Zone
+VALUES ('Arid Africa', 8000, 'Africa');
+
+INSERT INTO Zone
+VALUES ('Subtropical Asia', 4800, 'Asia');
+
+INSERT INTO Zone
+VALUES ('Warm Garden', 5000, 'Garden');
+
+INSERT INTO Zone
+VALUES ('Freezing Igloo', 3000, 'Polar Region');
+
+INSERT INTO IsIn
+VALUES (1, 'Wild Amazon');
+
+INSERT INTO IsIn
+VALUES (1, 'Arid Africa');
+
+INSERT INTO IsIn
+VALUES (1, 'Subtropical Asia');
+
+INSERT INTO IsIn
+VALUES (3, 'Freezing Igloo');
+
+INSERT INTO IsIn
+VALUES (4, 'Warm Garden');
+
+INSERT INTO IsIn
+VALUES (2, 'Warm Garden');
+
+INSERT INTO Equipment
+VALUES ('Syringe', 100, 'injecting drugs');
+
+INSERT INTO Equipment
+VALUES ('Carrot', 5, 'food');
+
+INSERT INTO Equipment
+VALUES ('Fish', 50, 'food');
+
+INSERT INTO Equipment
+VALUES ('Meat', 10, 'food');
+
+INSERT INTO Equipment
+VALUES ('Fresh leave', 1, 'food');
+
+INSERT INTO Equipment
+VALUES ('Insect', 100, 'food');
+
+INSERT INTO Equipment
+VALUES ('Dissecting Kit', 5, 'dissecting plants');
+
+INSERT INTO Equipment
+VALUES ('Combs', 10, 'grooming furred animals');
+
+INSERT INTO Food
+VALUES ('Carrot', 1000, TO_DATE('2024-03-01', 'YYYY-MM-DD'));
+
+INSERT INTO Food
+VALUES ('Fish', 2000, TO_DATE('2024-03-03', 'YYYY-MM-DD'));
+
+INSERT INTO Food
+VALUES ('Meat', 3000, TO_DATE('2024-03-08', 'YYYY-MM-DD'));
+
+INSERT INTO Food
+VALUES ('Fresh leave', 500, TO_DATE('2024-03-03', 'YYYY-MM-DD'));
+
+INSERT INTO Food
+VALUES ('Insect', 200, TO_DATE('2024-04-01', 'YYYY-MM-DD'));
+
+INSERT INTO Needs
+VALUES ('Freezing Igloo', 'Fish');
+
+INSERT INTO Needs
+VALUES ('Subtropical Asia', 'Meat');
+
+INSERT INTO Needs
+VALUES ('Wild Amazon', 'Meat');
+
+INSERT INTO Needs
+VALUES ('Arid Africa', 'Meat');
+
+INSERT INTO Needs
+VALUES ('Arid Africa', 'Fresh leave');
+
+INSERT INTO Needs
+VALUES ('Freezing Igloo', 'Syringe');
+
+INSERT INTO HabitatsContained
+VALUES ('Tropical', 22.0, 24.5, 80, 90, 'land', 'Wild Amazon');
+
+INSERT INTO HabitatsContained
+VALUES ('Desert', 28.5, 35.0, 22, 28, 'sand', 'Arid Africa');
+
+INSERT INTO HabitatsContained
+VALUES ('Subtropical', 15.0, 20.5, 60, 80, 'land and lake', 'Subtropical Asia');
+
+INSERT INTO HabitatsContained
+VALUES  ('Temporate', 2, 12.5, 45, 70, 'land', 'Warm Garden');
+
+INSERT INTO HabitatsContained
+VALUES ('Polar', -50.0, -30.5, 75, 85, 'ice and water','Freezing Igloo');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10001, 'Capuchin monkey', 10, 'Star', 'Mammalia', NULL, 'Subtropical');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10002, 'Emperor penguin', 4, 'Pingu', 'Aves', NULL, 'Polar');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10003, 'Atelopus spumarius harlequin frog', 2, 'Prince', 'Frogs', NULL, 'Tropical');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10004, 'Lysiana exocarpi', 22, 'Red Mistletoe', 'Angiosperms', 'PartSun', 'Temporate');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10005, 'Saguaro Cactus', 17, 'Big Saguaro', 'Magnoliopsida', 'FullSun', 'Desert');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10006, 'Emperor penguin', 5, 'Pengsoo', 'Mammalia', NULL, 'Polar');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10007, 'Emperor penguin', 6, 'Pororo', 'Mammalia', NULL, 'Polar');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10008, 'Atelopus spumarius harlequin frog', 2, 'Keroro', 'Frogs', NULL, 'Tropical');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10009, 'Emperor penguin', 4, 'Petty', 'Mammalia', NULL, 'Polar');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10010, 'Capuchin monkey', 2, 'Munki', 'Aves', NULL, 'Subtropical');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10011, 'Capuchin monkey', 2, 'Trunk', 'Aves', NULL, 'Subtropical');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10012, 'Capuchin monkey', 7, 'Monkichi', 'Aves', NULL, 'Subtropical');
+
+INSERT INTO CreaturesLivesIn
+VALUES (10013, 'Capuchin monkey', 9, 'Bape', 'Aves', NULL, 'Subtropical');
+
+INSERT INTO HasHealthRecord
+VALUES (1, TO_DATE('2024-01-01', 'YYYY-MM-DD'), 'annual vaccination', 10001);
+
+INSERT INTO HasHealthRecord
+VALUES (2, TO_DATE('2024-01-01', 'YYYY-MM-DD'), 'annual vaccination', 10002);
+
+INSERT INTO HasHealthRecord
+VALUES (3, TO_DATE('2023-09-04', 'YYYY-MM-DD'), 'dying leaves', 10004);
+
+INSERT INTO HasHealthRecord
+VALUES (4, TO_DATE('2024-01-04', 'YYYY-MM-DD'), 'egg laid on leaves', 10003);
+
+INSERT INTO HasHealthRecord
+VALUES (5, TO_DATE('2023-10-28', 'YYYY-MM-DD'), 'treatment for a skin infection', 10001);
+
+INSERT INTO HasHealthRecord
+VALUES (6, TO_DATE('2023-08-14', 'YYYY-MM-DD'), 'treatment for a flipper injury', 10002);
+
+INSERT INTO TakesCare
+VALUES (102, 'Syringe', 10001);
+
+INSERT INTO TakesCare
+VALUES (102, 'Syringe', 10002);
+
+INSERT INTO TakesCare
+VALUES (103, 'Fish', 10002);
+
+INSERT INTO TakesCare
+VALUES (103, 'Meat', 10001);
+
+INSERT INTO TakesCare
+VALUES (105, 'Dissecting Kit', 10004);
